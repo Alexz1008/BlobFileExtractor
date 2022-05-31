@@ -15,28 +15,33 @@ using System.Text.Json.Serialization;
 using System.Net.Http;
 using System.Net;
 using System.Collections.Generic;
+using PgpCore;
 
 namespace FileUploadFunction
 {
     public static class FileUpload
     {
+        // Configuration
+        static string Connection = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        static string containerName = "testcontainer";
+        static string zipPassword = "Y@qu1naBayLig7t";
+        static string ascPassword = "80a7-b6c549791522DDAF9583-2F05-4437-A1F9-##";
+        static string reqUrl = "https://prod-19.centralus.logic.azure.com:443/workflows/63adf88c7de647b6ba4946ca8d88d1db/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L_QH0v41gtej9_uXtPIjvecvchy9kT30LKEsZxkqscQ";
         [FunctionName("FileUpload")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, ILogger log)
         {
-            // Configuration
-            string Connection = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-            string containerName = "testcontainer";
+            // Setting up temporary environment
             var file = req.Form.Files["File"];
             Stream myBlob = file.OpenReadStream();
             var blobClient = new BlobContainerClient(Connection, containerName);
+            var secretsBlobClient = new BlobContainerClient(Connection, "secrets");
             var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()) + "\\";
-            var password = "Y@qu1naBayLig7t";
             var tempFilePath = tempPath + file.FileName;
+            var tempSecretPath = tempPath + "key.asc";
+            var tempSecretDecryptedPath = tempPath + "decrypted.txt";
             var zipDestPath = tempPath + "unzip";
-            var reqUrl = "https://prod-19.centralus.logic.azure.com:443/workflows/63adf88c7de647b6ba4946ca8d88d1db/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L_QH0v41gtej9_uXtPIjvecvchy9kT30LKEsZxkqscQ";
 
-            /*
             Directory.CreateDirectory(tempPath);
             Directory.CreateDirectory(zipDestPath);
 
@@ -49,7 +54,7 @@ namespace FileUploadFunction
             // Unzips the file
             RegisterProvider(CodePagesEncodingProvider.Instance);
             ZipFile zip = ZipFile.Read(tempFilePath);
-            zip.Password = password;
+            zip.Password = zipPassword;
             foreach (ZipEntry e in zip)
             {
                 e.Extract(zipDestPath, ExtractExistingFileAction.OverwriteSilently);
@@ -76,12 +81,23 @@ namespace FileUploadFunction
                 // Parse json of gpg
                 else
                 {
+                    log.LogInformation("Decrypting file: " + path);
+                    await secretsBlobClient.GetBlobClient("ORUATPrivateKey.asc").DownloadToAsync(tempSecretPath);
 
+                    FileInfo privateKey = new FileInfo(tempSecretPath);
+                    EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, ascPassword);
+
+                    // Reference input/output files
+                    FileInfo inputFile = new FileInfo(path);
+                    FileInfo decryptedFile = new FileInfo(tempSecretDecryptedPath);
+
+                    // Decrypt
+                    PGP pgp = new PGP(encryptionKeys);
+                    await pgp.DecryptFileAsync(inputFile, decryptedFile);
                 }
             }
 
             // Sends a json of the file to the next logic app
-            */
             List<ORBSForm> list = new List<ORBSForm>();
             list.Add(new ORBSForm("TesterName"));
             log.LogInformation("Test 1 " + list);
@@ -117,11 +133,6 @@ namespace FileUploadFunction
             }
 
             return new OkObjectResult("Completed transaction");
-        }
-
-        private static String decryptGpg(String path)
-        {
-            return "";
         }
     }
 
