@@ -24,9 +24,9 @@ namespace FileUploadFunction
         // Configuration
         static string Connection = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
         static string containerName = "testcontainer";
-        static string zipPassword = "Y@qu1naBayLig7t";
-        static string ascPassword = "80a7-b6c549791522DDAF9583-2F05-4437-A1F9-##";
-        static string reqUrl = "https://prod-19.centralus.logic.azure.com:443/workflows/63adf88c7de647b6ba4946ca8d88d1db/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L_QH0v41gtej9_uXtPIjvecvchy9kT30LKEsZxkqscQ";
+        static string zipPassword = "Password1";
+        static string ascPassword = "Password2";
+        static string reqUrl = "nextappurl";
         [FunctionName("FileUpload")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, ILogger log)
