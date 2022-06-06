@@ -43,6 +43,7 @@ stages:
         inlineScript: |
           mkdir $(Build.SourcesDirectory)\BlobFile
           az storage blob download --container-name $(containername) --file $(Build.SourcesDirectory)\BlobFile\$(filename) --name $(filename) --account-key $(accountkey) --account-name $(accountname)
+          ls $(Build.SourcesDirectory)\BlobFile
 
 - stage: Deploy
   displayName: Deploy stage
