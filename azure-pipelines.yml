@@ -6,6 +6,15 @@
 trigger:
 - master
 
+parameters:
+- name: filename
+  displayName: File Name
+  type: string
+  default: ubuntu-latest
+  values:
+  - test1
+  - test2
+
 variables:
   # Azure Resource Manager connection created during pipeline creation
   azureSubscription: '2e3e90cb-f19a-454e-bf5e-965eef55cd14'
