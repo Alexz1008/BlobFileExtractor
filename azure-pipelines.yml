@@ -26,7 +26,6 @@ variables:
   workingDirectory: '$(System.DefaultWorkingDirectory)/'
   
   containername: 'testcontainer'
-  filename: 'test.yml'
   accountkey: 'Bk/ppTDkk6wX3gWrsMnAPSbQ4clHGS6tyUk56nuAsCTbAUsh1KJF+4VZSUdS6PAF9U2GFtnRE6EF+AStPjDZRg=='
   accountname: 'alexz1008teststorage'
 
@@ -48,7 +47,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           mkdir $(Build.SourcesDirectory)\BlobFile
-          az storage blob download --container-name $(containername) --file $(Build.SourcesDirectory)\BlobFile\$(filename) --name $(filename) --account-key $(accountkey) --account-name $(accountname)
+          az storage blob download --container-name $(containername) --file $(Build.SourcesDirectory)\BlobFile\${{ parameters.filename }} --name ${{ parameters.filename }} --account-key $(accountkey) --account-name $(accountname)
           ls $(Build.SourcesDirectory)\BlobFile
 
 - stage: Deploy
