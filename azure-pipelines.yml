@@ -18,6 +18,11 @@ variables:
 
   # Working Directory
   workingDirectory: '$(System.DefaultWorkingDirectory)/'
+  
+  containername: 'testcontainer'
+  filename: 'test.yml'
+  accountkey: 'Bk/ppTDkk6wX3gWrsMnAPSbQ4clHGS6tyUk56nuAsCTbAUsh1KJF+4VZSUdS6PAF9U2GFtnRE6EF+AStPjDZRg=='
+  accountname: 'alexz1008teststorage'
 
 stages:
 - stage: Build
@@ -30,25 +35,14 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
-    - task: DotNetCoreCLI@2
-      displayName: Build
+    - task: AzureCLI@2
       inputs:
-        command: 'build'
-        projects: |
-          $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
-
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
-
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
+        azureSubscription: 'Self-learning (762b33d6-f108-422a-999a-e0f6ca67203f)'
+        scriptType: 'ps'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          mkdir $(Build.SourcesDirectory)\BlobFile
+              az storage blob download --container-name $(containername) --file $(Build.SourcesDirectory)\BlobFile --name $(filename) --account-key $(accountkey) --account-name $(accountname)
 
 - stage: Deploy
   displayName: Deploy stage
