@@ -11,9 +11,6 @@ parameters:
   displayName: File Name
   type: string
   default: ubuntu-latest
-  values:
-  - test1
-  - test2
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
